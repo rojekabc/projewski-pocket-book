@@ -1,0 +1,6 @@
+build
+makearm
+makeclean
+
+.*.un~
+*~
