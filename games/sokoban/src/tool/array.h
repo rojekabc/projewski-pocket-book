@@ -1,6 +1,6 @@
 #ifndef _GOC_ARRAY_H_
 #	define _GOC_ARRAY_H_
-#	include "tablica.h"
+#	include "../tablica.h"
 
 typedef struct GOC_Array {
 	void** pElement;

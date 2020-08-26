@@ -1,9 +1,9 @@
 #include <dirent.h>
 #include <inkview.h>
 
-#include "malloc.h"
-#include "array.h"
-#include "mystr.h"
+#include "tool/malloc.h"
+#include "tool/array.h"
+#include "tool/mystr.h"
 #include "collection.h"
 
 #ifndef EMULATOR

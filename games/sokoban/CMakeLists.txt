@@ -114,9 +114,9 @@ SET (SRC_LIST
 	${CMAKE_SOURCE_DIR}/src/sokoban.c
 	${CMAKE_SOURCE_DIR}/src/config.c
 	${CMAKE_SOURCE_DIR}/src/collection.c
-	${CMAKE_SOURCE_DIR}/src/array.c
-	${CMAKE_SOURCE_DIR}/src/tablica.c
-	${CMAKE_SOURCE_DIR}/src/mystr.c
+	${CMAKE_SOURCE_DIR}/src/tool/array.c
+	${CMAKE_SOURCE_DIR}/src/tool/tablica.c
+	${CMAKE_SOURCE_DIR}/src/tool/mystr.c
 	)	
 
 ADD_EXECUTABLE (sokoban.app 

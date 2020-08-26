@@ -1,4 +1,4 @@
-#include "array.h"
+#include "tool/array.h"
 
 typedef struct Collection {
 	char* folder;
