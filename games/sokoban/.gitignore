@@ -1,6 +1,10 @@
-build
 makearm
 makeclean
 
 .*.un~
 *~
+
+/cmake-build-debug/
+/cmake-build-release/
+/build/
+/.idea/

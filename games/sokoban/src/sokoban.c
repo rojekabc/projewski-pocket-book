@@ -6,6 +6,8 @@
 #include <sys/mount.h>
 #include <dlfcn.h>
 #include "inkview.h"
+#include "config.h"
+#include "collection.h"
 
 #define historyLimit 1000
 #define boardMaxSize 25 //Hard to tell - currently this is 25 = (800 - 50)/30.
@@ -19,14 +21,6 @@ char *originalLevel =
 
 char *level;
 
-#ifndef EMULATOR
-const char *configFileName = STATEPATH "/sokoban.cfg";
-const char *levelsFolder = USERDATA "/share/sokoban/";
-#else
-const char *configFileName = "sokoban.cfg";
-const char *levelsFolder = "SokobanLevels/"; 
-#endif
-
 #ifdef PLATFORM_FW5
 #	define KEY_OK IV_KEY_OK
 #	define KEY_BACK IV_KEY_BACK
@@ -39,18 +33,15 @@ const char *levelsFolder = "SokobanLevels/";
 #	define KEY_MENU IV_KEY_MENU
 #endif
 
-int levelNo;
 int levels;
-char* levelSetFileName;
 
 void PrepareBoard();
 void DrawBoard();
 
 void setLevelNo(int newLevelNo) {
-	levelNo = newLevelNo;
-	FILE *config = fopen(configFileName, "w");
-	fprintf(config, "%i\n%s", levelNo, levelSetFileName);
-	fclose(config);
+	config_setLevel(newLevelNo);
+	config_write();
+
 	PrepareBoard();
 	DrawBoard();
 }
@@ -290,6 +281,7 @@ void PrepareBoard() {
 	int i;
 	boxCount = 0;
 	boxesOnPlace = 0;
+	int levelNo = config_getLevel();
 	while (getNextLine()) {
 		int hasData;
 		i = 0;
@@ -501,7 +493,7 @@ void Move(int dx, int dy) {
 
 void loadLevel() {
 	FILE *levelFile;
-	if ((levelFile = fopen(levelSetFileName, "rb"))){
+	if ((levelFile = fopen(config_getLevelFileName(), "rb"))){
 		fseek(levelFile, 0, SEEK_END);
   		int fileSize = ftell (levelFile);
   		rewind(levelFile);
@@ -520,10 +512,9 @@ void loadLevelsHandler(int index) {
 	if (levelNames[index] != NULL) {
 		strcpy(fullName, levelsFolder);
 		strcat(fullName, levelNames[index]);
-		levelSetFileName = fullName;
-  	}
-	else {
-		levelSetFileName = NULL;
+		config_setLevelFileName(fullName);
+  	} else {
+		config_setLevelFileName(NULL);
 	}
 	loadLevel();
 	GetLevelCount();
@@ -531,13 +522,8 @@ void loadLevelsHandler(int index) {
 }
 
 void PickLevelSet() {
-	DIR* dir = opendir(levelsFolder);
-	if (dir == NULL) {
-		Message(0, "Open Levels Collection", "Currently you have no additional level collections on your device.\nTo add them you have to create folder named \\system\\share\\sokoban in your Pocketbook memory and put there sets in xsb format. You can download them say at http://www.sourcecode.se/sokoban/", 20000);
-		return;
-	}
-	struct dirent *file;
-	int i = 2;
+	GOC_Array* collections = collections_retrieve();
+	int pos = 2;
 	levelMenu[0].type = ITEM_HEADER;
 	levelMenu[0].index = 0;
 	levelMenu[0].text = "Choose level set";
@@ -545,6 +531,15 @@ void PickLevelSet() {
 	levelMenu[1].index = 1;
 	levelMenu[1].text = "Mini Cosmos";
 
+	for (int i=0; (pos<99) && (i<collections->nElement); i++) {
+		levelMenu[pos].type = ITEM_ACTIVE;
+		levelMenu[pos].index = pos;
+		free(levelMenu[pos].text);
+		levelMenu[pos].text = strdup(((struct Collection*)collections->pElement[i])->title);
+		pos++;
+	}
+
+	/*
 	while ((file = readdir(dir)) && i < 99) {
 		if (file->d_name[0] != '.') {
 			levelMenu[i].type = ITEM_ACTIVE;
@@ -556,10 +551,10 @@ void PickLevelSet() {
 			i++;
 		}
 	}
-	closedir(dir);
-	levelMenu[i].type = 0;
-	levelMenu[i].index = 0;
-	levelMenu[i].text = NULL;
+	*/
+	levelMenu[pos].type = 0;
+	levelMenu[pos].index = 0;
+	levelMenu[pos].text = NULL;
 	OpenMenu(levelMenu, 0, 30, 30, loadLevelsHandler);
 }
 
@@ -589,6 +584,7 @@ void Undo() {
 
 int selectedIndex = 0;
 void mainMenuHandler(int index) {
+	int levelNo = config_getLevel();
 	selectedIndex = index;
 	switch (index) {
 	case 101:
@@ -637,6 +633,7 @@ void ShowMenu() {
 }
 
 void KeyPressed(int key) {
+	int levelNo = config_getLevel();
 	switch (key) {
 	case KEY_BACK:
 		CloseApp();
@@ -704,7 +701,7 @@ int main_handler(int type, int par1, int par2) {
 		KeyPressed(KEY_MENU);
 	} else if (type == EVT_KEYRELEASE && par1 == KEY_OK && par2 == 0) {
 		KeyPressed(KEY_OK);
-	} else if (type == EVT_POINTERUP) { // 1404 x 1872
+	} else if (type == EVT_POINTERUP) {
 		int w = ScreenWidth();
 		int h = ScreenHeight();
 		// y - y1 / y1 - y2 = x - x1 / x1 - x2
@@ -762,15 +759,7 @@ int main(int argc, char **argv) {
 	/*
 	message = malloc(128);
 	*/
-	FILE *config = fopen(configFileName, "r");
-	if (config != NULL) {
-		levelSetFileName = (char*)malloc(sizeof(char) * 1024);
-		fscanf(config, "%i\n%s", &levelNo, levelSetFileName);
-		fclose(config);
-	} else {
-		levelNo = 0;
-		levelSetFileName = NULL;
-	}
+	config_read();
 	InkViewMain(main_handler);
 	return 0;
 }
