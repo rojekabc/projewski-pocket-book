@@ -8,15 +8,14 @@
 #include "inkview.h"
 #include "config.h"
 #include "collection.h"
+#include "boardelement.h"
+#include "bitmaps.h"
 #include "tool/debug.h"
 #include "tool/mystr.h"
 
 #define historyLimit 1000
 #define boardMaxSize 25 //Hard to tell - currently this is 25 = (800 - 50)/30.
 
-extern const ibitmap box30, boxOnTheSpot30, empty30, player30, playerRight30, playerOnTheSpot30, playerOnTheSpotRight30, spot30, wall30;
-extern const ibitmap box50, boxOnTheSpot50, empty50, player50, playerRight50, playerOnTheSpot50, playerOnTheSpotRight50, spot50, wall50;
-ifont *font;
 char *level;
 
 #ifdef PLATFORM_FW5
@@ -45,16 +44,6 @@ void boardLoadLevel() {
     DrawBoard();
 }
 
-enum BoardElement {
-    Box = 'o',
-    BoxOnTheSpot = 'O',
-    Empty = ' ',
-    Player = '@',
-    PlayerOnTheSpot = '+',
-    Spot = '.',
-    Wall = '#'
-};
-
 static imenu mainMenu[] = {
         {ITEM_HEADER, 0,   "Menu",                  NULL},
         {ITEM_ACTIVE, 101, "Undo",                  NULL},
@@ -69,7 +58,6 @@ static imenu mainMenu[] = {
 };
 
 imenu levelMenu[11];
-char *levelNames[11];
 
 int tileSize;
 int playerX, playerY;
@@ -82,6 +70,7 @@ int lastMoveLeft = 1;
 int boardHeight;
 int boardWidth;
 char board[boardMaxSize * boardMaxSize/*max (currently) supported linear level size is size of screen*/];
+
 
 int getCoordinateForXY(int x, int y) {
     return x + y * boardWidth;
@@ -133,12 +122,14 @@ void boardCompress(int newWidth, int newHeight) {
         boardWidth = newWidth;
         boardHeight = newHeight;
         tileSize = 50;
+
     } else {
         //prevention of too big level
         boardWidth = newWidth > width30 ? width30 : newWidth;
         boardHeight = newHeight > height30 ? height30 : newHeight;
         tileSize = 30;
     }
+    bitmaps_setTileSize(tileSize);
 }
 ///****end of board
 
@@ -305,74 +296,7 @@ void DrawCell(int i, int j) {
     //NOTE: failed usage of ibitmap *image = &name; and then DrawBitmap(,, image); - find out why?
     int x = baseX + i * tileSize;
     int y = baseY + j * tileSize;
-    switch (tileSize) {
-        case 30:
-            switch (getBoard(i, j)) {
-                case Box:
-                    DrawBitmap(x, y, &box30);
-                    break;
-                case BoxOnTheSpot:
-                    DrawBitmap(x, y, &boxOnTheSpot30);
-                    break;
-                case Empty:
-                    DrawBitmap(x, y, &empty30);
-                    break;
-                case Player:
-                    if (lastMoveLeft == 1) {
-                        DrawBitmap(x, y, &player30);
-                    } else {
-                        DrawBitmap(x, y, &playerRight30);
-                    }
-                    break;
-                case PlayerOnTheSpot:
-                    if (lastMoveLeft == 1) {
-                        DrawBitmap(x, y, &playerOnTheSpot30);
-                    } else {
-                        DrawBitmap(x, y, &playerOnTheSpotRight30);
-                    }
-                    break;
-                case Spot:
-                    DrawBitmap(x, y, &spot30);
-                    break;
-                case Wall:
-                    DrawBitmap(x, y, &wall30);
-                    break;
-            }
-            break;
-        case 50:
-            switch (getBoard(i, j)) {
-                case Box:
-                    DrawBitmap(x, y, &box50);
-                    break;
-                case BoxOnTheSpot:
-                    DrawBitmap(x, y, &boxOnTheSpot50);
-                    break;
-                case Empty:
-                    DrawBitmap(x, y, &empty50);
-                    break;
-                case Player:
-                    if (lastMoveLeft == 1) {
-                        DrawBitmap(x, y, &player50);
-                    } else {
-                        DrawBitmap(x, y, &playerRight50);
-                    }
-                    break;
-                case PlayerOnTheSpot:
-                    if (lastMoveLeft == 1) {
-                        DrawBitmap(x, y, &playerOnTheSpot50);
-                    } else {
-                        DrawBitmap(x, y, &playerOnTheSpotRight50);
-                    }
-                    break;
-                case Spot:
-                    DrawBitmap(x, y, &spot50);
-                    break;
-                case Wall:
-                    DrawBitmap(x, y, &wall50);
-                    break;
-            }
-            break;
-    }
+    DrawBitmap(x, y, bitmaps_getTile(getBoard(i, j), !lastMoveLeft));
 }
 
 void UpdateRegion(int x, int y, int dx, int dy) {
@@ -442,7 +366,7 @@ void Move(int dx, int dy) {
             Message(ICON_INFORMATION, "Congratulations!",
                     "You completed the level, press any key to continue", 10000);
             config_setLevel(collection_current()->folder, levelNo+1);
-            boardLoadLevel(levelNo + 1);
+            boardLoadLevel();
         } else {
             Message(ICON_INFORMATION, "Congratulations!",
                     "You completed all the levels", 10000);
@@ -567,19 +491,18 @@ void mainMenuHandler(int index) {
             Undo();
             break;
         case 102:
-            boardLoadLevel(levelNo);
+            boardLoadLevel();
             break;
         case 103:
             if (levelNo < collection->levels) {
                 config_setLevel(collection->folder, levelNo+1);
-
-                boardLoadLevel(levelNo + 1);
+                boardLoadLevel();
             }
             break;
         case 104:
             if (levelNo > 0) {
                 config_setLevel(collection->folder, levelNo-1);
-                boardLoadLevel(levelNo - 1);
+                boardLoadLevel();
             }
             break;
         case 105:
@@ -657,7 +580,7 @@ void KeyPressed(int key) {
 
 int main_handler(int type, int par1, int par2) {
     if (type == EVT_INIT) {
-        font = OpenFont("LiberationSans", 16, 0);
+        OpenFont("LiberationSans", 16, 0);
         loadLevel(config_getLevelFileName());
         PrepareBoard();
     } else if (type == EVT_SHOW) {
