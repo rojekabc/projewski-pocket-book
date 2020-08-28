@@ -1,9 +1,4 @@
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/mount.h>
 #include <dlfcn.h>
 #include "inkview.h"
 #include "config.h"
@@ -17,8 +12,6 @@
 
 #define historyLimit 1000
 #define boardMaxSize 25 //Hard to tell - currently this is 25 = (800 - 50)/30.
-
-char *level;
 
 #ifdef PLATFORM_FW5
 #	define KEY_OK IV_KEY_OK
@@ -278,23 +271,26 @@ void UpdateRegion(int x, int y, int dx, int dy) {
                                                                                         * tileSize);
 }
 
+#define HEADER_FONT_SIZE 48
 ifont* headerFont;
 
 void DrawHeader() {
     SetFont(headerFont, BLACK);
     char* headerText = NULL;
-    string_set(headerText, "Sokoban   Collection ");
+    string_set(headerText, "Sokoban - ");
     string_add(headerText, collection_current()->folder);
-    string_add(headerText, "[ ");
+    string_add(headerText, " [");
     headerText = goc_stringAddInt(headerText, config_getLevel());
     string_add(headerText, "/");
     headerText = goc_stringAddInt(headerText, collection_current()->levels);
     string_add(headerText, "]");
-    DrawTextRect(0, 0, ScreenWidth(), 50, headerText, ALIGN_CENTER | VALIGN_MIDDLE | DOTS | RTLAUTO);
+    DrawTextRect(0, 0, ScreenWidth(), HEADER_FONT_SIZE + 10, headerText, ALIGN_CENTER | VALIGN_MIDDLE | DOTS | RTLAUTO);
+    DrawLine(0, HEADER_FONT_SIZE + 10, ScreenWidth(), HEADER_FONT_SIZE + 10, BLACK);
 }
 
 void DrawBoard() {
     ClearScreen();
+    DrawHeader();
     int i, j;
     for (i = 0; i < boardWidth; i++) {
         for (j = 0; j < boardHeight; j++) {
@@ -498,6 +494,8 @@ void mainMenuHandler(int index) {
         case 108:
             CloseApp();
             break;
+        default:
+            break;
     }
 }
 
@@ -542,6 +540,8 @@ void KeyPressed(int key) {
             break;
         case KEY_MENU:
             ShowMenu();
+            break;
+        default:
             break;
     }
 }
@@ -605,10 +605,12 @@ int main() {
     OpenScreen();
     // This operation needs OpenScreen call before, or SEGV
     // And it disables
+    SetPanelType(PANEL_DISABLED);
     SetShowPanelReader(0);
+    SetPanelSeparatorEnabled(0);
 #endif
     memset(levelMenu, 0, sizeof(imenu) * 11);
-    headerFont = OpenFont(DEFAULTFONT, 12, 0);
+    headerFont = OpenFont(DEFAULTFONT, HEADER_FONT_SIZE, 0);
 
     collection_select(config_getCollectionName());
     if (collection_current() == NULL) {
