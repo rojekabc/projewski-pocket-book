@@ -168,42 +168,6 @@ int popMove(int *dx, int *dy, int *pull) {
 }
 ///****end of movement stack
 
-///****nextLine This part of code will try to reproduce functionality of strtok(char*, "\r\n")
-///again have no idea how to create new char* - so using global variable for response
-int levelIndex = 0;
-
-/*
-char currentLine[100];
-
-int getNextLine() {
-    if (level[levelIndex] == 0) {
-        return 0;
-    }
-    int lineBegin = levelIndex;
-    //seek for end
-    while (level[levelIndex] != '\r' && level[levelIndex] != '\n'
-           && level[levelIndex] != 0) {
-        levelIndex++;
-    }
-    int lineEnd = levelIndex;
-    //this to remove trailing blanks
-    while (level[lineEnd - 1] == Empty) {
-        lineEnd--;
-    }
-    //seek for first character of next line
-    while (level[levelIndex] == '\r' || level[levelIndex] == '\n') {
-        levelIndex++;
-    }
-    int i;
-    for (i = 0; i < lineEnd - lineBegin; i++) {
-        currentLine[i] = level[lineBegin + i];
-    }
-    currentLine[lineEnd - lineBegin] = 0;
-    return 1;
-}
-
-///****end of nextLine
-*/
 int baseX;
 int baseY;
 
@@ -257,7 +221,6 @@ void PrepareBoard(const char* levelFilename) {
     boardReset();
     resetMovesStack();
     int currentLineIndex = 0;
-    levelIndex = 0;
     size_t currentLevelWidth = 0;
     int currentLevelHeight = 0;
     size_t i;
@@ -313,6 +276,21 @@ void UpdateRegion(int x, int y, int dx, int dy) {
 
     PartialUpdateBW(baseX + minx * tileSize, baseY + miny * tileSize, width * tileSize, height
                                                                                         * tileSize);
+}
+
+ifont* headerFont;
+
+void DrawHeader() {
+    SetFont(headerFont, BLACK);
+    char* headerText = NULL;
+    string_set(headerText, "Sokoban   Collection ");
+    string_add(headerText, collection_current()->folder);
+    string_add(headerText, "[ ");
+    headerText = goc_stringAddInt(headerText, config_getLevel());
+    string_add(headerText, "/");
+    headerText = goc_stringAddInt(headerText, collection_current()->levels);
+    string_add(headerText, "]");
+    DrawTextRect(0, 0, ScreenWidth(), 50, headerText, ALIGN_CENTER | VALIGN_MIDDLE | DOTS | RTLAUTO);
 }
 
 void DrawBoard() {
@@ -381,24 +359,6 @@ void Move(int dx, int dy) {
     }
 
 }
-
-/*
-void loadLevel(char* levelFilename) {
-    debug("Loading level file %s\n", levelFilename);
-    FILE *levelFile = fopen(levelFilename, "rb");
-    if (levelFile == NULL) {
-        return;
-    }
-
-    fseek(levelFile, 0, SEEK_END);
-    int fileSize = ftell(levelFile);
-    rewind(levelFile);
-    free(level);
-    level = (char *) malloc(sizeof(char) * fileSize);
-    fread(level, 1, fileSize, levelFile);
-    fclose(levelFile);
-}
- */
 
 int collectionPickerStart = 0;
 int collectionMenuPosition = 0;
@@ -648,6 +608,7 @@ int main() {
     SetShowPanelReader(0);
 #endif
     memset(levelMenu, 0, sizeof(imenu) * 11);
+    headerFont = OpenFont(DEFAULTFONT, 12, 0);
 
     collection_select(config_getCollectionName());
     if (collection_current() == NULL) {

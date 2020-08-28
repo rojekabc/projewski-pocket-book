@@ -81,7 +81,7 @@ GOC_Iterator *goc_propertiesListCategory(GOC_Properties*, char*);
 // podaj warto�� w�a�ciwo�ci dla klucza z domy�lnej kategorii
 char *goc_propertiesGetValue(GOC_Properties*, const char*);
 // podaj warto�� w�a�ciwo�ci dla klucza z wybranej kategorii
-char *goc_propertiesGetCategoryValue(GOC_Properties*, char*, char*);
+char *goc_propertiesGetCategoryValue(GOC_Properties*, const char*, const char*);
 
 
 GOC_Properties *goc_propertiesAddCategory(GOC_Properties*, char*);

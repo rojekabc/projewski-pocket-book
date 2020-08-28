@@ -35,7 +35,7 @@ static GOC_Category *goc_categoryAlloc(char *name) {
     return c;
 }
 
-static GOC_Category *propertiesGetCategoryInternal(GOC_Properties *p, char *name) {
+static GOC_Category *propertiesGetCategoryInternal(GOC_Properties *p, const char *name) {
     int i = p->nCategory;
     GOC_Category *c = NULL;
 
@@ -305,31 +305,26 @@ GOC_Iterator *goc_propertiesListCategory(GOC_Properties *p, char *cName) {
 // podaj warto�� w�a�ciwo�ci dla klucza z domy�lnej kategorii
 char *goc_propertiesGetValue(GOC_Properties *p, const char *kName) {
     GOC_DEBUG("-> goc_propertiesGetValue");
-    GOC_Category *cat = NULL;
-    GOC_Property *prop = NULL;
     char *result = NULL;
-    while (result == NULL) {
-        if ((p == NULL) || (kName == NULL))
-            break;
-        cat = propertiesGetCategoryInternal(
-                p, GOC_PROPERTIES_CATEGORY_DEFAULT);
-        if (cat == NULL)
-            break;
-        prop = goc_categoryGetProperty(cat, kName);
-        if (prop == NULL)
-            break;
-        result = prop->value;
-        break;
+    if ((p == NULL) || (kName == NULL)) {
+        return result;
     }
-    GOC_DEBUG("<- goc_propertiesGetValue");
-    return result;
+    return goc_propertiesGetCategoryValue(p, GOC_PROPERTIES_CATEGORY_DEFAULT, kName);
 }
 
 // podaj warto�� w�a�ciwo�ci dla klucza z wybranej kategorii
-char *goc_propertiesGetCategoryValue(GOC_Properties *p, char *cName, char *kName) {
+char *goc_propertiesGetCategoryValue(GOC_Properties *p, const char *cName, const char *kName) {
     GOC_DEBUG("-> goc_propertiesGetCategoryValue");
+    struct GOC_Category *category = propertiesGetCategoryInternal(p, cName);
+    if (category == NULL) {
+        return NULL;
+    }
+    struct GOC_Property* property = goc_categoryGetProperty(category, kName);
+    if (property == NULL) {
+        return NULL;
+    }
     GOC_DEBUG("<- goc_propertiesGetCategoryValue");
-    return NULL;
+    return property->value;
 }
 
 void goc_propertiesSave(GOC_Properties *properties, GOC_OStream *os) {
@@ -402,7 +397,7 @@ GOC_Properties *goc_propertiesRemCategory(GOC_Properties *properties, char *cate
     for (int i = 0; i < properties->nCategory; i++) {
         if (goc_stringEquals(properties->pCategory[i]->name, categoryName)) {
             goc_categoryFree(properties->pCategory[i]);
-            goc_tableRemove(properties->pCategory, &properties->nCategory, sizeof(GOC_Category*), i);
+            goc_tableRemove(properties->pCategory, &properties->nCategory, sizeof(GOC_Category *), i);
             return properties;
         }
     }
