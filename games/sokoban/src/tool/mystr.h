@@ -3,7 +3,7 @@
 
 #define string_free(_variable_) _variable_ = goc_stringFree(_variable_)
 #define string_add(_variable_, _value_) _variable_ = goc_stringAdd(_variable_, _value_)
-#define string_set(_variable_, _value_) _variable_ = goc_stringSet(_variable_, _value_)
+#define string_set(_variable_, _value_) _variable_ = goc_stringCopy(_variable_, _value_)
 
 extern const char* GOC_ENDSTR;
 

@@ -5,14 +5,43 @@
 #include "tool/array.h"
 #include "tool/mystr.h"
 #include "collection.h"
+#include "config.h"
 
 #ifndef EMULATOR
+#	define configFileName STATEPATH "/sokoban.cfg"
 #	define levelsFolder USERDATA "/share/sokoban/"
 #else
+#	define configFileName "sokoban.cfg"
 #	define levelsFolder "SokobanLevels/"
 #endif
+#define DEFAULT_COLLECTION "minicosmos"
 
 GOC_Array* collections = NULL;
+struct Collection* currentCollection = NULL;
+
+// result 1 if found, 0 if not
+int collection_select(const char* collectionName) {
+    collections_retrieve();
+
+    if (collectionName == NULL) {
+        collectionName = DEFAULT_COLLECTION;
+    }
+
+    for (int i=0; i<collections->nElement; i++) {
+        Collection* collection = goc_arrayGet(collections, i);
+        if (goc_stringEquals(collection->folder, collectionName)) {
+            currentCollection = collection;
+            config_setCollection(collection->folder);
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+Collection* collection_current() {
+    return currentCollection;
+}
 
 struct Collection* collection_alloc() {
 	ALLOC(Collection, collection);
@@ -59,6 +88,7 @@ struct Collection* collection_retrieve(const char* name) {
 				}
 			}
 			fclose(descFile);
+			string_free(filename);
 		}
 	}
 	closedir(dir);
@@ -66,6 +96,7 @@ struct Collection* collection_retrieve(const char* name) {
 		collection_free(result);
 		return NULL;
 	}
+	string_set(result->folder, name);
 	return result;
 }
 

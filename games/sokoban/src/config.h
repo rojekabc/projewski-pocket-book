@@ -7,9 +7,8 @@
 #	define levelsFolder "SokobanLevels/"
 #endif
 
-void config_write();
-void config_read();
-void config_setLevel(int level);
-void config_setLevelFileName(char* filename);
+void config_setLevel(const char* collectionName, int levelNo);
 int config_getLevel();
 char* config_getLevelFileName();
+const char* config_getCollectionName();
+void config_setCollection(const char *collectionName);
