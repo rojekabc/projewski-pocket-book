@@ -12,6 +12,8 @@
 #include "bitmaps.h"
 #include "tool/debug.h"
 #include "tool/mystr.h"
+#include "tool/istream.h"
+#include "tool/fileistream.h"
 
 #define historyLimit 1000
 #define boardMaxSize 25 //Hard to tell - currently this is 25 = (800 - 50)/30.
@@ -30,17 +32,14 @@ char *level;
 #	define KEY_MENU IV_KEY_MENU
 #endif
 
-void PrepareBoard();
+void PrepareBoard(const char* levelFilename);
 
 void DrawBoard();
-
-void loadLevel(char*);
 
 void PickLevelSet();
 
 void boardLoadLevel() {
-    loadLevel(config_getLevelFileName());
-    PrepareBoard();
+    PrepareBoard(config_getLevelFileName());
     DrawBoard();
 }
 
@@ -172,6 +171,8 @@ int popMove(int *dx, int *dy, int *pull) {
 ///****nextLine This part of code will try to reproduce functionality of strtok(char*, "\r\n")
 ///again have no idea how to create new char* - so using global variable for response
 int levelIndex = 0;
+
+/*
 char currentLine[100];
 
 int getNextLine() {
@@ -202,7 +203,7 @@ int getNextLine() {
 }
 
 ///****end of nextLine
-
+*/
 int baseX;
 int baseY;
 
@@ -252,7 +253,7 @@ int moveBox(int x, int y, int dx, int dy) {
     return 0;
 }
 
-void PrepareBoard() {
+void PrepareBoard(const char* levelFilename) {
     boardReset();
     resetMovesStack();
     int currentLineIndex = 0;
@@ -262,30 +263,35 @@ void PrepareBoard() {
     size_t i;
     boxCount = 0;
     boxesOnPlace = 0;
-    while (getNextLine()) {
-        if (goc_stringStartsWith(currentLine, "Author: ") || goc_stringStartsWith(currentLine, "Title: ")) {
+
+    GOC_IStream* iStream = goc_fileIStreamOpen(levelFilename);
+    char* line = NULL;
+
+    while ((string_free(line), line = goc_isReadLine(iStream))) {
+        if (goc_stringStartsWith(line, "Author: ") || goc_stringStartsWith(line, "Title: ")) {
             continue;
         }
         currentLevelHeight++;
-        if (currentLevelWidth < strlen(currentLine)) {
-            currentLevelWidth = strlen(currentLine);
+        if (currentLevelWidth < strlen(line)) {
+            currentLevelWidth = strlen(line);
         }
-        for (i = 0; i < strlen(currentLine); i++) {
-            setBoard(i, currentLineIndex, currentLine[i]);
-            if (currentLine[i] == Player || currentLine[i] == PlayerOnTheSpot) {
+        for (i = 0; i < strlen(line); i++) {
+            setBoard(i, currentLineIndex, line[i]);
+            if (line[i] == Player || line[i] == PlayerOnTheSpot) {
                 playerX = i;
                 playerY = currentLineIndex;
             }
-            if (currentLine[i] == Box) {
+            if (line[i] == Box) {
                 boxCount++;
             }
-            if (currentLine[i] == BoxOnTheSpot) {
+            if (line[i] == BoxOnTheSpot) {
                 boxCount++;
                 boxesOnPlace++;
             }
         }
         currentLineIndex++;
     }
+    goc_isClose(iStream);
     boardCompress(currentLevelWidth, currentLevelHeight);
 
     baseX = (ScreenWidth() - boardWidth * tileSize) / 2;
@@ -376,6 +382,7 @@ void Move(int dx, int dy) {
 
 }
 
+/*
 void loadLevel(char* levelFilename) {
     debug("Loading level file %s\n", levelFilename);
     FILE *levelFile = fopen(levelFilename, "rb");
@@ -391,6 +398,7 @@ void loadLevel(char* levelFilename) {
     fread(level, 1, fileSize, levelFile);
     fclose(levelFile);
 }
+ */
 
 int collectionPickerStart = 0;
 int collectionMenuPosition = 0;
@@ -581,8 +589,7 @@ void KeyPressed(int key) {
 int main_handler(int type, int par1, int par2) {
     if (type == EVT_INIT) {
         OpenFont("LiberationSans", 16, 0);
-        loadLevel(config_getLevelFileName());
-        PrepareBoard();
+        PrepareBoard(config_getLevelFileName());
     } else if (type == EVT_SHOW) {
         DrawBoard();
     } else if (type == EVT_KEYPRESS && par1 != KEY_OK) {
