@@ -32,6 +32,7 @@ int collection_select(const char* collectionName) {
         if (goc_stringEquals(collection->folder, collectionName)) {
             currentCollection = collection;
             config_setCollection(collection->folder);
+            configuration_store();
             return 1;
         }
     }

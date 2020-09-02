@@ -303,7 +303,7 @@ GOC_Iterator *goc_propertiesListCategory(GOC_Properties *p, char *cName) {
 }
 
 // podaj warto�� w�a�ciwo�ci dla klucza z domy�lnej kategorii
-char *goc_propertiesGetValue(GOC_Properties *p, const char *kName) {
+const char *goc_propertiesGetValue(GOC_Properties *p, const char *kName) {
     GOC_DEBUG("-> goc_propertiesGetValue");
     char *result = NULL;
     if ((p == NULL) || (kName == NULL)) {
@@ -313,13 +313,13 @@ char *goc_propertiesGetValue(GOC_Properties *p, const char *kName) {
 }
 
 // podaj warto�� w�a�ciwo�ci dla klucza z wybranej kategorii
-char *goc_propertiesGetCategoryValue(GOC_Properties *p, const char *cName, const char *kName) {
+const char *goc_propertiesGetCategoryValue(GOC_Properties *p, const char *cName, const char *kName) {
     GOC_DEBUG("-> goc_propertiesGetCategoryValue");
-    struct GOC_Category *category = propertiesGetCategoryInternal(p, cName);
+    struct GOC_Category *category = propertiesGetCategoryInternal(p, cName ? cName : GOC_PROPERTIES_CATEGORY_DEFAULT);
     if (category == NULL) {
         return NULL;
     }
-    struct GOC_Property* property = goc_categoryGetProperty(category, kName);
+    struct GOC_Property *property = goc_categoryGetProperty(category, kName);
     if (property == NULL) {
         return NULL;
     }
@@ -353,7 +353,7 @@ void goc_propertiesSave(GOC_Properties *properties, GOC_OStream *os) {
     }
 }
 
-static struct GOC_Category *resolveCategory(GOC_Properties *properties, char *name) {
+static struct GOC_Category *resolveCategory(GOC_Properties *properties, const char *name) {
     for (int i = 0; i < properties->nCategory; i++) {
         if (goc_stringEquals(properties->pCategory[i]->name, name)) {
             return properties->pCategory[i];
@@ -374,7 +374,8 @@ GOC_Properties *goc_propertiesSet(GOC_Properties *properties, const char *name, 
     return properties;
 }
 
-GOC_Properties *goc_propertiesCategorySet(GOC_Properties *properties, char *categoryName, char *name, char *value) {
+GOC_Properties *
+goc_propertiesCategorySet(GOC_Properties *properties, const char *categoryName, const char *name, const char *value) {
     if (properties == NULL) {
         properties = goc_propertiesAlloc();
     }

@@ -79,14 +79,14 @@ GOC_Iterator *goc_propertiesListCategories(GOC_Properties*);
 // wylistowanie w�a�ciwo�ci w kategorii
 GOC_Iterator *goc_propertiesListCategory(GOC_Properties*, char*);
 // podaj warto�� w�a�ciwo�ci dla klucza z domy�lnej kategorii
-char *goc_propertiesGetValue(GOC_Properties*, const char*);
+const char *goc_propertiesGetValue(GOC_Properties*, const char*);
 // podaj warto�� w�a�ciwo�ci dla klucza z wybranej kategorii
-char *goc_propertiesGetCategoryValue(GOC_Properties*, const char*, const char*);
+const char *goc_propertiesGetCategoryValue(GOC_Properties*, const char*, const char*);
 
 
 GOC_Properties *goc_propertiesAddCategory(GOC_Properties*, char*);
 GOC_Properties *goc_propertiesSet(GOC_Properties*, const char*, const char*);
-GOC_Properties *goc_propertiesCategorySet(GOC_Properties*, char*, char*, char*);
+GOC_Properties *goc_propertiesCategorySet(GOC_Properties*, const char*, const char*, const char*);
 GOC_Properties *goc_propertiesRemCategory(GOC_Properties*, char*);
 
 #endif // ifndef _GOC_PROPERTIES_H_

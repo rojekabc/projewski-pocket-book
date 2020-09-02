@@ -302,7 +302,7 @@ char *goc_stringAddInt(char *dst, int val)
 {
 	char *buf = malloc(32);
 	memset(buf, 0, 32);
-	sprintf(buf, "%d", val);
+	snprintf(buf, 32, "%d", val);
 	dst = goc_stringAdd(dst, buf);
 	free(buf);
 	return dst;
@@ -345,7 +345,7 @@ char *goc_stringToLower(char *src)
 	return src;
 }
 
-// sprawdzenie czy ciag znaków str1 koñczy siê na str2
+// sprawdzenie czy ciag znakï¿½w str1 koï¿½czy siï¿½ na str2
 int goc_stringEndsWith(const char *str1, const char *str2)
 {
 	int len;
@@ -364,7 +364,7 @@ int goc_stringEndsWith(const char *str1, const char *str2)
 	return 0;
 }
 
-// sprawdzenie czy ci±g znaków str1 rozpoczyna siê od str2
+// sprawdzenie czy ciï¿½g znakï¿½w str1 rozpoczyna siï¿½ od str2
 int goc_stringStartsWith(const char *str1, const char *str2)
 {
 	// Oba NULL, lub ten sam adres
@@ -378,8 +378,8 @@ int goc_stringStartsWith(const char *str1, const char *str2)
 	return 0;
 }
 
-// sprawdzenie czy ciag znaków str1 koñczy siê na str2
-// Sprawdzanie bez ró¿nicy na wielko¶æ liter
+// sprawdzenie czy ciag znakï¿½w str1 koï¿½czy siï¿½ na str2
+// Sprawdzanie bez rï¿½nicy na wielkoï¿½ï¿½ liter
 int goc_stringEndsWithCase(const char *str1, const char *str2)
 {
 	int len;
@@ -397,8 +397,8 @@ int goc_stringEndsWithCase(const char *str1, const char *str2)
 	return 0;
 }
 
-// sprawdzenie czy ci±g znaków str1 rozpoczyna siê od str2
-// Sprawdzanie bez ró¿nicy na wielko¶æ liter
+// sprawdzenie czy ciï¿½g znakï¿½w str1 rozpoczyna siï¿½ od str2
+// Sprawdzanie bez rï¿½nicy na wielkoï¿½ï¿½ liter
 int goc_stringStartsWithCase(const char *str1, const char *str2)
 {
 	// Oba NULL, lub ten sam adres
@@ -412,8 +412,8 @@ int goc_stringStartsWithCase(const char *str1, const char *str2)
 	return 0;
 }
 
-// sprawdzenie, czy sa sobie rowne, czy nie (nie wa¿na
-// jest wielko¶æ liter)
+// sprawdzenie, czy sa sobie rowne, czy nie (nie waï¿½na
+// jest wielkoï¿½ï¿½ liter)
 // rowne, zwroci 1, nie 0
 // porownuje rowniez przypadek, gdy sa one NULL
 int goc_stringEqualsCase(const char *str1, const char *str2)
@@ -429,7 +429,7 @@ int goc_stringEqualsCase(const char *str1, const char *str2)
 	return 0;
 }
 
-// Okre¶la d³ugo¶æ ci±gu znaków, zabezpieczone
+// Okreï¿½la dï¿½ugoï¿½ï¿½ ciï¿½gu znakï¿½w, zabezpieczone
 // przed NULL
 int goc_stringLength(const char* str)
 {

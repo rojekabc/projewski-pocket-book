@@ -126,7 +126,7 @@ SET(SRC_LIST
         src/tool/iterator.c src/tool/iterator.h
         src/tool/tableiterator.c src/tool/tableiterator.h
         src/tool/properties.c src/tool/properties.h
-        src/boardelement.h src/bitmaps.h src/bitmaps.c)
+        src/boardelement.h src/bitmaps.h src/bitmaps.c src/stagegame.c src/stagegame.h src/stagestart.c src/stagestart.h src/stagemain.c src/stagemain.h src/button.c src/button.h)
 
 ADD_EXECUTABLE(sokoban.app
         ${SRC_LIST}

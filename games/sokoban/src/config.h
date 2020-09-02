@@ -12,3 +12,6 @@ int config_getLevel();
 char* config_getLevelFileName();
 const char* config_getCollectionName();
 void config_setCollection(const char *collectionName);
+const char* config_slot_getName();
+void config_slot_select(int pos);
+void configuration_store();
