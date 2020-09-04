@@ -1,5 +1,4 @@
 #include <inkview.h>
-#include <string.h>
 #include "stagemain.h"
 
 int main() {

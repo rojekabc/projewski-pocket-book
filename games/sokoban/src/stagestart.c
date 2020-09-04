@@ -3,6 +3,8 @@
 #include "button.h"
 #include "config.h"
 #include "stagemain.h"
+#include "tool/debug.h"
+#include "tool/mystr.h"
 
 #define TITLE_FONT_SIZE 120
 ifont *titleFont = NULL;
@@ -12,6 +14,12 @@ InkButton *buttonSlot3 = NULL;
 InkButton *buttonSlotAnonymous = NULL;
 #define TITLE_Y_POSITION 200
 
+enum StageModes {
+    PageMode,
+    KeyboardMode
+};
+int mode = PageMode;
+
 void stageStart_show();
 
 void stageStart_pointerHit(int x, int y);
@@ -20,7 +28,10 @@ void stageStart_init();
 
 int stageStart_handle(int type, int par1, int par2) {
     if (type == EVT_SHOW) {
-        stageStart_show();
+        debug("stageStart_handle EVT_SHOW %d %d\n", par1, par2);
+        if (mode == PageMode) {
+            stageStart_show();
+        }
     } else if (type == EVT_POINTERUP) {
         stageStart_pointerHit(par1, par2);
     }
@@ -42,6 +53,7 @@ void stageStart_show() {
 
 int initialized = 0;
 #define BUTTON_DISTANCE 30
+
 void stageStart_init() {
     if (initialized) {
         return;
@@ -55,11 +67,14 @@ void stageStart_init() {
     titleFont = OpenFont(DEFAULTFONTB, TITLE_FONT_SIZE, 1);
 
     int yPosition = TITLE_Y_POSITION + TITLE_FONT_SIZE + 40;
-    buttonSlot1 = inkButton_alloc(xPosition, yPosition, "Slot 1");
+    const char *slotUser = config_getSlotUsername(0);
+    buttonSlot1 = inkButton_alloc(xPosition, yPosition, slotUser ? slotUser : "Slot 1");
     yPosition += buttonSlot1->height + BUTTON_DISTANCE;
-    buttonSlot2 = inkButton_alloc(xPosition, yPosition, "Slot 2");
+    slotUser = config_getSlotUsername(1);
+    buttonSlot2 = inkButton_alloc(xPosition, yPosition, slotUser ? slotUser : "Slot 2");
     yPosition += buttonSlot2->height + BUTTON_DISTANCE;
-    buttonSlot3 = inkButton_alloc(xPosition, yPosition, "Slot 3");
+    slotUser = config_getSlotUsername(2);
+    buttonSlot3 = inkButton_alloc(xPosition, yPosition, slotUser ? slotUser : "Slot 3");
     yPosition += buttonSlot3->height + BUTTON_DISTANCE;
     buttonSlotAnonymous = inkButton_alloc(xPosition, yPosition, "Anonymous");
 
@@ -70,18 +85,87 @@ void stageStart_init() {
 
 }
 
+void enter_username();
+
+void enter_password();
+
+void keyboard_handler_password(char *text) {
+    debug("-> keyboard_handler_password %s\n", text);
+    while (1) {
+        mode = PageMode;
+        const char *password = config_getPassword();
+        if (password) {
+            if (goc_stringEquals(text, password)) {
+                select_stage(stage_game);
+            } // else wrong password
+        } else {
+            config_setPassword(text);
+            select_stage(stage_game);
+        }
+        break;
+    }
+    string_free(text);
+    debug("<- keyboard_handler_password\n");
+}
+
+#define PASSWORD_LENGTH 4
+
+void enter_password() {
+    debug("-> enter_password\n");
+    char *keyboardUsername = malloc(PASSWORD_LENGTH + 1);
+    memset(keyboardUsername, 0, PASSWORD_LENGTH + 1);
+    OpenKeyboard("User PIN (4 numbers)", keyboardUsername, PASSWORD_LENGTH - 1,
+                 KBD_NUMERIC | KBD_PASSWORD | KBD_NOUPDATE_AFTER_CLOSE, keyboard_handler_password);
+    debug("<- enter_password\n");
+}
+
+void keyboard_handler_username(char *text) {
+    debug("-> keyboard_handler_username\n");
+    while (1) {
+        if (text == NULL || strlen(text) == 0) {
+            mode = PageMode;
+            break;
+        }
+        config_setUsername(text);
+        enter_password();
+        break;
+    }
+    string_free(text);
+    debug("<- keyboard_handler_username\n");
+}
+
+#define USERNAME_LENGTH 16
+
+void enter_username() {
+    debug("-> enter_username\n");
+    mode = KeyboardMode;
+    char *keyboardUsername = malloc(USERNAME_LENGTH + 1);
+    memset(keyboardUsername, 0, USERNAME_LENGTH + 1);
+    OpenKeyboard("User name", keyboardUsername, USERNAME_LENGTH - 1,
+                 KBD_NORMAL | KBD_FIRSTUPPER | KBD_NOUPDATE_AFTER_CLOSE,
+                 keyboard_handler_username);
+    debug("<- enter_username\n");
+}
+
 void stageStart_pointerHit(int x, int y) {
+    debug("-> stageStart_pointerHit\n");
     if (inkObject_is_inside(buttonSlot1, x, y)) {
         config_slot_select(0);
-        select_stage(stage_game);
     } else if (inkObject_is_inside(buttonSlot2, x, y)) {
         config_slot_select(1);
-        select_stage(stage_game);
     } else if (inkObject_is_inside(buttonSlot3, x, y)) {
         config_slot_select(2);
-        select_stage(stage_game);
     } else if (inkObject_is_inside(buttonSlotAnonymous, x, y)) {
         config_slot_select(3);
-        select_stage(stage_game);
     }
+    const char *username = config_getUsername();
+    if (username == NULL) {
+        enter_username();
+    } else {
+        const char *password = config_getPassword();
+        if (password && strlen(password)) {
+            enter_password();
+        }
+    }
+    debug("<- stageStart_pointerHit\n");
 }

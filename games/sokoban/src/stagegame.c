@@ -223,7 +223,6 @@ void PrepareBoard(const char* levelFilename) {
 
     GOC_IStream* iStream = goc_fileIStreamOpen(levelFilename);
     if (iStream == NULL) {
-        Message(ICON_WARNING, "Failure", "Cannot open level file", 5);
         return;
     }
     char* line = NULL;

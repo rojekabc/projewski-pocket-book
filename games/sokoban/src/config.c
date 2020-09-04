@@ -30,6 +30,7 @@
 
 typedef struct {
     char *username;
+    char *password;
     char *collection;
     int level;
     const char *slotCategory;
@@ -74,19 +75,23 @@ void configuration_store() {
     if (configuration == NULL) {
         return;
     }
-    goc_propertiesCategorySet(properties, NULL, "collection",
-                              configuration->slotConfiguration[SLOT_ANONYMOUS_ID].collection);
-    char *levelString = goc_stringAddInt(NULL, configuration->slotConfiguration[SLOT_ANONYMOUS_ID].level);
-    goc_propertiesCategorySet(properties, NULL, configuration->slotConfiguration[SLOT_ANONYMOUS_ID].collection,
-                              levelString);
-    string_free(levelString);
-    for (int i = 0; i < SLOT_AMOUNT - 1; i++) {
+    for (int i = 0; i < SLOT_AMOUNT; i++) {
         if (configuration->slotConfiguration[i].username == NULL) {
             continue;
         }
+        if (i != SLOT_ANONYMOUS_ID) {
+            debug("Set up user %s for slot %d with category %s\n", configuration->slotConfiguration[i].username, i,
+                  configuration->slotConfiguration[i].slotCategory);
+            goc_propertiesCategorySet(properties, configuration->slotConfiguration[i].slotCategory, "username",
+                                      configuration->slotConfiguration[i].username);
+            goc_propertiesCategorySet(properties, configuration->slotConfiguration[i].slotCategory, "password",
+                                      configuration->slotConfiguration[i].password);
+        }
+        debug("Set up collection %s for slot %d with category %s\n", configuration->slotConfiguration[i].collection, i,
+              configuration->slotConfiguration[i].slotCategory);
         goc_propertiesCategorySet(properties, configuration->slotConfiguration[i].slotCategory, "collection",
                                   configuration->slotConfiguration[i].collection);
-        levelString = goc_stringAddInt(NULL, configuration->slotConfiguration[i].level);
+        char *levelString = goc_stringAddInt(NULL, configuration->slotConfiguration[i].level);
         goc_propertiesCategorySet(properties, configuration->slotConfiguration[i].slotCategory,
                                   configuration->slotConfiguration[i].collection, levelString);
         string_free(levelString);
@@ -94,6 +99,7 @@ void configuration_store() {
 
     GOC_OStream *oStream = goc_fileOStreamOpen(configFileName);
     if (oStream != NULL) {
+        debug("Properties save");
         goc_propertiesSave(properties, oStream);
         goc_osClose(oStream);
     }
@@ -106,7 +112,6 @@ void configuration_load(Configuration *config) {
 
     GOC_IStream *iStream = goc_fileIStreamOpen(configFileName);
     if (iStream == NULL) {
-        debug("Cannot open configuration file %s\n", configFileName);
         return;
     }
 
@@ -118,14 +123,16 @@ void configuration_load(Configuration *config) {
         if (username == NULL && i != SLOT_ANONYMOUS_ID) {
             continue;
         }
+        if (i != SLOT_ANONYMOUS_ID) {
+            string_set(config->slotConfiguration[i].username, username);
+            string_set(config->slotConfiguration[i].password,
+                       goc_propertiesGetCategoryValue(properties, slotCategory, "password"));
+        }
         const char *collection = goc_propertiesGetCategoryValue(properties, slotCategory, "collection");
         if (collection) {
             string_set(config->slotConfiguration[i].collection, collection);
             const char *collectionLevel = goc_propertiesGetCategoryValue(properties, slotCategory, collection);
             config->slotConfiguration[i].level = (collectionLevel ? atoi(collectionLevel) : 1);
-            debug("Set slot %d to %s:%d\n", i, config->slotConfiguration[i].collection, config->slotConfiguration[i].level);
-        } else {
-            debug("Collection is NULL for slot %d", i);
         }
     }
 }
@@ -155,6 +162,26 @@ void config_setCollection(const char *collectionName) {
     }
 }
 
+const char *config_getUsername() {
+    return configuration_retrieve()->currentConfiguration->username;
+}
+
+void config_setUsername(const char *username) {
+    string_set(configuration_retrieve()->currentConfiguration->username, username);
+}
+
+const char *config_getSlotUsername(int slot) {
+    return configuration_retrieve()->slotConfiguration[slot].username;
+}
+
+const char *config_getPassword() {
+    return configuration_retrieve()->currentConfiguration->password;
+}
+
+void config_setPassword(const char *password) {
+    string_set(configuration_retrieve()->currentConfiguration->password, password);
+}
+
 int config_getLevel() {
     return configuration_retrieve()->currentConfiguration->level;
 }
@@ -162,7 +189,7 @@ int config_getLevel() {
 char *config_getLevelFileName() {
     SlotConfiguration *currentConfiguration = configuration_retrieve()->currentConfiguration;
     return string_assign(currentConfiguration->levelFilename,
-                  calculateLevelFilename(currentConfiguration->collection, currentConfiguration->level));
+                         calculateLevelFilename(currentConfiguration->collection, currentConfiguration->level));
 }
 
 const char *config_getCollectionName() {
