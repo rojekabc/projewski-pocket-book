@@ -89,6 +89,9 @@ void enter_username();
 
 void enter_password();
 
+char *keyboardPassword = NULL;
+char *keyboardUsername = NULL;
+
 void keyboard_handler_password(char *text) {
     debug("-> keyboard_handler_password %s\n", text);
     while (1) {
@@ -104,7 +107,7 @@ void keyboard_handler_password(char *text) {
         }
         break;
     }
-    string_free(text);
+    string_free(keyboardPassword);
     debug("<- keyboard_handler_password\n");
 }
 
@@ -112,9 +115,9 @@ void keyboard_handler_password(char *text) {
 
 void enter_password() {
     debug("-> enter_password\n");
-    char *keyboardUsername = malloc(PASSWORD_LENGTH + 1);
-    memset(keyboardUsername, 0, PASSWORD_LENGTH + 1);
-    OpenKeyboard("User PIN (4 numbers)", keyboardUsername, PASSWORD_LENGTH - 1,
+    string_assign(keyboardPassword, malloc(PASSWORD_LENGTH + 1));
+    memset(keyboardPassword, 0, PASSWORD_LENGTH + 1);
+    OpenKeyboard("User PIN (4 numbers)", keyboardPassword, PASSWORD_LENGTH - 1,
                  KBD_NUMERIC | KBD_PASSWORD | KBD_NOUPDATE_AFTER_CLOSE, keyboard_handler_password);
     debug("<- enter_password\n");
 }
@@ -130,7 +133,7 @@ void keyboard_handler_username(char *text) {
         enter_password();
         break;
     }
-    string_free(text);
+    string_free(keyboardUsername);
     debug("<- keyboard_handler_username\n");
 }
 
@@ -139,7 +142,7 @@ void keyboard_handler_username(char *text) {
 void enter_username() {
     debug("-> enter_username\n");
     mode = KeyboardMode;
-    char *keyboardUsername = malloc(USERNAME_LENGTH + 1);
+    string_assign(keyboardUsername, malloc(USERNAME_LENGTH + 1));
     memset(keyboardUsername, 0, USERNAME_LENGTH + 1);
     OpenKeyboard("User name", keyboardUsername, USERNAME_LENGTH - 1,
                  KBD_NORMAL | KBD_FIRSTUPPER | KBD_NOUPDATE_AFTER_CLOSE,

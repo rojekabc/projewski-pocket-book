@@ -201,8 +201,6 @@ static GOC_Property *goc_categorySetInternal(GOC_Category *c, const char *name, 
     return p;
 }
 
-#include "debug.h"
-
 // za�adowanie ze strumienia wskazanego
 GOC_Properties *goc_propertiesLoad(GOC_Properties *p, GOC_IStream *is) {
     char *line = NULL;
@@ -246,7 +244,6 @@ GOC_Properties *goc_propertiesLoad(GOC_Properties *p, GOC_IStream *is) {
                 continue;
             *pos = 0;
             category = propertiesAddCategoryInternal(p, line + 1);
-            debug("Load category %s\n", category->name);
             continue;
         }
 
@@ -338,7 +335,6 @@ void goc_propertiesSave(GOC_Properties *properties, GOC_OStream *os) {
     for (int i = 0; i < properties->nCategory; i++) {
         GOC_Category *category = properties->pCategory[i];
         if (!goc_stringEquals(category->name, GOC_PROPERTIES_CATEGORY_DEFAULT)) {
-            debug("Store category %s\n", category->name);
             goc_osWriteByte(os, '[');
             goc_osWrite(os, category->name, strlen(category->name));
             goc_osWriteByte(os, ']');
@@ -347,10 +343,14 @@ void goc_propertiesSave(GOC_Properties *properties, GOC_OStream *os) {
 
         for (int j = 0; j < category->nProperty; j++) {
             GOC_Property *property = category->pProperty[j];
-            debug("Store property %s\n", property->name);
-            goc_osWrite(os, property->name, strlen(property->name));
+            char *name = property->name;
+            char *value = property->value;
+            if (value == NULL || name == NULL) {
+                continue;
+            }
+            goc_osWrite(os, name, strlen(name));
             goc_osWriteByte(os, '=');
-            goc_osWrite(os, property->value, strlen(property->value));
+            goc_osWrite(os, value, strlen(value));
             goc_osWriteByte(os, '\n');
         }
 
